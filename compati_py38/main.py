@@ -2,8 +2,8 @@ import re
 
 from lk_utils import fs
 
-pattern_1 = re.compile(r'= *\b(dict|list|tuple|set)\[')
-pattern_2 = re.compile(r'(?::|->) *\b(dict|list|tuple|set)\[')
+pattern_1 = re.compile(r'=.*\b(dict|list|tuple|set)\[')
+pattern_2 = re.compile(r'(?::|->).*\b(dict|list|tuple|set)\[')
 
 
 def scan(dir_: str) -> None:
