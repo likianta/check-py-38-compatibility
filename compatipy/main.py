@@ -18,14 +18,6 @@ def check_py38(proj_root: str):
                 report(node, msg, filepath=relpath(fp, proj_root), filename=fn)
 
 
-def _check_dir(dir_: str):
-    pass
-
-
-def _check_file(file: str):
-    pass
-
-
 def scan(dir_: str) -> None:
     dir_ = fs.normpath(dir_)
     
@@ -118,23 +110,32 @@ def check_subscript(
             if (id := node1.id) in (
                     'dict', 'list', 'set', 'tuple',
             ):
-                yield node, id
+                yield node, f'`{id}` is not subscriptable'
         elif isinstance((node2 := node.slice), ast.Subscript):
             yield from _check(node2)
     
+    skip_linenos = set()
+    
     for node in ast.walk(tree):
+        #   note: ast.walk is breadth-first.
         # if hasattr(node, 'lineno'):
         #     print(':i', node.lineno, node)
         
-        if isinstance(node, ast.Assign):
-            if isinstance((node := node.value), ast.Subscript):
-                yield from _check(node)
+        if getattr(node, 'lineno', None) in skip_linenos:
+            if isinstance(node, ast.NamedExpr):
+                for subnode in ast.walk(node):
+                    if isinstance(subnode, ast.Subscript):
+                        yield from _check(subnode)
+            continue
         
-        elif isinstance(node, ast.AnnAssign):
+        if isinstance(node, ast.Subscript):
+            yield from _check(node)
+            continue
+        
+        if isinstance(node, ast.AnnAssign):
             if future_annotations:
+                skip_linenos.add(node.lineno)
                 continue
-            if isinstance((node := node.annotation), ast.Subscript):
-                yield from _check(node)
 
 
 def report(node: ast.AST, msg: str = '', **kwargs):
