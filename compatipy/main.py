@@ -110,14 +110,18 @@ def check_subscript(
             if (id := node1.id) in (
                     'dict', 'list', 'set', 'tuple',
             ):
-                yield node, f'`{id}` is not subscriptable'
+                if node.lineno in weak_warning_linenos:
+                    yield node, f'`{id}` is not subscriptable! ' \
+                                f'[i](no future annotations)[/]'
+                else:
+                    yield node, f'`{id}` is not subscriptable!'
         elif isinstance((node2 := node.slice), ast.Subscript):
             yield from _check(node2)
     
     skip_linenos = set()
+    weak_warning_linenos = set()
     
-    for node in ast.walk(tree):
-        #   note: ast.walk is breadth-first.
+    for node in ast.walk(tree):  # note: ast.walk is breadth-first.
         # if hasattr(node, 'lineno'):
         #     print(':i', node.lineno, node)
         
@@ -132,22 +136,24 @@ def check_subscript(
             yield from _check(node)
             continue
         
-        if isinstance(node, ast.AnnAssign):
+        if isinstance(node, (ast.AnnAssign, ast.FunctionDef)):
             if future_annotations:
                 skip_linenos.add(node.lineno)
-                continue
+            else:
+                weak_warning_linenos.add(node.lineno)
+            continue
 
 
 def report(node: ast.AST, msg: str = '', **kwargs):
-    from textwrap import indent
-    print(
-        ':i',
-        indent('\n' + '\n'.join(
-            f'{k}: {v}' for k, v in {
-                **kwargs,
-                'row': node.lineno,
-                'col': node.col_offset,
-                'msg': msg,
-            }.items()
-        ), '    ')
-    )
+    print(':ir', '''
+        [cyan]path:[/] [magenta]{filepath}[/]
+        [cyan]name:[/] [yellow]{filename}[/]
+        [cyan]line:[/] [b green]{row}[/][dim]:[/][dim green]{col}[/]
+        [cyan]info:[/] [red]{msg}[/]
+    '''.format(
+        filepath=kwargs['filepath'],
+        filename=kwargs['filename'],
+        row=node.lineno,
+        col=node.col_offset,
+        msg=msg,
+    ))
