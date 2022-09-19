@@ -1,9 +1,29 @@
+import ast
 import re
+import typing as t
+from posixpath import relpath
 
 from lk_utils import fs
 
 pattern_1 = re.compile(r'=.*\b(dict|list|tuple|set)\[')
 pattern_2 = re.compile(r'(?::|->).*\b(dict|list|tuple|set)\[')
+
+
+def check_py38(proj_root: str):
+    for fp, fn in fs.findall_files(proj_root, '.py'):
+        with open(fp) as f:
+            code = f.read()
+            future_enabled = 'from __future__ import annotations' in code
+            for node, msg in check_subscript(ast.parse(code), future_enabled):
+                report(node, msg, filepath=relpath(fp, proj_root), filename=fn)
+
+
+def _check_dir(dir_: str):
+    pass
+
+
+def _check_file(file: str):
+    pass
 
 
 def scan(dir_: str) -> None:
@@ -85,3 +105,48 @@ def scan(dir_: str) -> None:
             for lineno, msg in node['warnings'].items():
                 print(f'[bright_black]|[/]   '
                       f'[cyan]\\[{lineno:>3}][/]: {msg}', ':r')
+
+
+# noinspection PyTypeChecker
+def check_subscript(
+        tree: ast.AST,
+        future_annotations=False
+) -> t.Iterator[tuple]:
+    # noinspection PyUnresolvedReferences,PyShadowingBuiltins,PyTypeChecker
+    def _check(node: ast.Subscript) -> None:
+        if isinstance((node1 := node.value), ast.Name):
+            if (id := node1.id) in (
+                    'dict', 'list', 'set', 'tuple',
+            ):
+                yield node, id
+        elif isinstance((node2 := node.slice), ast.Subscript):
+            yield from _check(node2)
+    
+    for node in ast.walk(tree):
+        # if hasattr(node, 'lineno'):
+        #     print(':i', node.lineno, node)
+        
+        if isinstance(node, ast.Assign):
+            if isinstance((node := node.value), ast.Subscript):
+                yield from _check(node)
+        
+        elif isinstance(node, ast.AnnAssign):
+            if future_annotations:
+                continue
+            if isinstance((node := node.annotation), ast.Subscript):
+                yield from _check(node)
+
+
+def report(node: ast.AST, msg: str = '', **kwargs):
+    from textwrap import indent
+    print(
+        ':i',
+        indent('\n' + '\n'.join(
+            f'{k}: {v}' for k, v in {
+                **kwargs,
+                'row': node.lineno,
+                'col': node.col_offset,
+                'msg': msg,
+            }.items()
+        ), '    ')
+    )

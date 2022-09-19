@@ -1,3 +1,4 @@
 argsense >= 0.4.2
+astpretty
 lk-logger >= 5.2.4
 lk-utils >= 2.3.2

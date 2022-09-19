@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "compati-py38"
-version = "0.1.0"
+name = "compatipy"
+version = "0.2.0a1"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 license = "MIT"
@@ -19,5 +19,5 @@ url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
 default = true
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
