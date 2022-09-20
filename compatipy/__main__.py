@@ -17,7 +17,7 @@ def check_subscript(file_i: str):
         else:
             future_enabled = False
         tree = ast.parse(code)
-        main.check_subscript(tree, future_enabled)
+        main.check_typing_annotations(tree, future_enabled)
 
 
 @cli.cmd()
