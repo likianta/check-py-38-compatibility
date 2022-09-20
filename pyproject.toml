@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "compatipy"
-version = "0.2.0a3"
+version = "0.2.0b3"
 description = ""
 authors = ["likianta <likianta@foxmail.com>"]
 license = "MIT"
@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.8"
 argsense = "^0.4.2"
+astpretty = ""
 lk-logger = "^5.2.4"
 lk-utils = "^2.3.2"
 

@@ -5,7 +5,6 @@ from argsense import cli
 
 from . import main
 
-cli.cmd()(main.scan)
 cli.cmd()(main.check_py38)
 
 
