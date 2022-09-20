@@ -19,4 +19,4 @@ py -m compatipy check-py38 <path/to/project/src/folder>
 
 Screenshot:
 
-*TODO*
+![](.assets/20220920124430.png)
