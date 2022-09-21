@@ -12,28 +12,52 @@ class T:
 
 def check_py38(path: str) -> None:
     if isfile(path):
-        _check_file(path)
+        err_count = _check_file(path)
     else:
-        _check_dir(path)
-    print('done')
+        err_count = _check_dir(path)
+    if err_count:
+        print(':r', f'[#e64747][b]{err_count}[/] errors found (see above).[/]')
+    else:
+        print(':r', '[green]done with no error found.[/]')
 
 
-def _check_dir(dir_: str) -> None:
+def _check_dir(dir_: str) -> int:
+    err_count = 0
     for fp, fn in fs.findall_files(dir_, '.py'):
-        print(':di0', fn)
         with open(fp) as f:
             code = f.read()
             future_enabled = 'from __future__ import annotations' in code
-            for node, msg in check_typing_annotations(ast.parse(code), future_enabled):
-                report(node, msg, filepath=relpath(fp, dir_), filename=fn)
+            collector = tuple(check_typing_annotations(
+                ast.parse(code), future_enabled
+            ))
+        if collector:
+            print(':ri0s', f'[red]found [bright_red b]{len(collector)}[/] '
+                           f'errors in [magenta]{fn}[/]:[/]')
+            fp = relpath(fp, dir_)
+            for node, msg in collector:
+                report(node, msg, filepath=fp, filename=fn)
+            err_count += len(collector)
+        else:
+            print(':ri0s', f'[green dim]found no error in [cyan]{fn}[/][/]')
+    return err_count
 
 
-def _check_file(file: str) -> None:
+def _check_file(file: str, _info=None) -> int:
+    count = 0
+    
+    if _info is None:
+        _info = {'filepath': file,
+                 'filename': fs.get_filename(file)}
+    
     with open(file) as f:
         code = f.read()
         future_enabled = 'from __future__ import annotations' in code
-        for node, msg in check_typing_annotations(ast.parse(code), future_enabled):
-            report(node, msg, filepath=file, filename=fs.get_filename(file))
+        for node, msg in check_typing_annotations(
+                ast.parse(code), future_enabled
+        ):
+            count += 1
+            report(node, msg, **_info)
+    return count
 
 
 # -----------------------------------------------------------------------------
@@ -69,6 +93,7 @@ def check_typing_annotations(
                 return str(node.value)
             else:
                 raise ValueError(node)
+        
         if isinstance(node.op, ast.BitOr):
             left = _get_plain_literal(node.left)
             right = _get_plain_literal(node.right)
