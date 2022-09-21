@@ -20,8 +20,7 @@ def check_py38(path: str) -> None:
 
 def _check_dir(dir_: str) -> None:
     for fp, fn in fs.findall_files(dir_, '.py'):
-        print(':d', fn)
-        print(':i0')
+        print(':di0', fn)
         with open(fp) as f:
             code = f.read()
             future_enabled = 'from __future__ import annotations' in code
