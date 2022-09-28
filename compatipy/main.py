@@ -1,7 +1,6 @@
 import ast
 import typing as t
 from posixpath import isfile
-from posixpath import relpath
 
 from lk_utils import fs
 
@@ -23,22 +22,21 @@ def check_py38(path: str) -> None:
 
 def _check_dir(dir_: str) -> int:
     err_count = 0
-    for fp, fn in fs.findall_files(dir_, '.py'):
-        with open(fp) as f:
-            code = f.read()
+    for f in fs.findall_files(dir_, '.py'):
+        with open(f.path) as fh:
+            code = fh.read()
             future_enabled = 'from __future__ import annotations' in code
             collector = tuple(check_typing_annotations(
                 ast.parse(code), future_enabled
             ))
         if collector:
             print(':ri0s', f'[red]found [bright_red b]{len(collector)}[/] '
-                           f'errors in [magenta]{fn}[/]:[/]')
-            fp = relpath(fp, dir_)
+                           f'errors in [magenta]{f.name}[/]:[/]')
             for node, msg in collector:
-                report(node, msg, filepath=fp, filename=fn)
+                report(node, msg, filepath=f.relpath, filename=f.name)
             err_count += len(collector)
         else:
-            print(':ri0s', f'[green dim]found no error in [cyan]{fn}[/][/]')
+            print(':ri0s', f'[green dim]found no error in [cyan]{f.name}[/][/]')
     return err_count
 
 
