@@ -45,7 +45,7 @@ def _check_file(file: str, _info=None) -> int:
     
     if _info is None:
         _info = {'filepath': file,
-                 'filename': fs.get_filename(file)}
+                 'filename': fs.filename(file)}
     
     with open(file) as f:
         code = f.read()
@@ -149,7 +149,7 @@ def report(node: ast.AST, msg: str = '', **kwargs):
     print(':ir', '''
         [cyan]path:[/] [magenta]{filepath}[/]
         [cyan]name:[/] [yellow]{filename}[/]
-        [cyan]line:[/] [b green]{row}[/][dim]:[/][dim green]{col}[/]
+        [cyan]line:[/] [green]\\[[b]{row}[/][dim]:{col}[/]][/]
         [cyan]info:[/] [red]{msg}[/]
     '''.format(
         filepath=kwargs['filepath'],

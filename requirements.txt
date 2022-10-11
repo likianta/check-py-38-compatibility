@@ -1,4 +1,4 @@
 argsense >= 0.4.2
 astpretty
-lk-logger >= 5.3.2
-lk-utils >= 2.4.0a0
+lk-logger >= 5.4.2
+lk-utils >= 2.4.0
